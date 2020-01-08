@@ -98,4 +98,5 @@ $list | `
 
 ##Get-Content c:\temp\Myfile-all.txt | ForEach-Object {(get-aduser -filter {samaccountname -like $PSItem}) | Select-Object samaccountname, enabled } | Out-File c:\temp\Myfile-outrez.txt
 Get-Content C:\temp\Myfile-all.txt | ForEach-Object {get-aduser $PSItem | Where-Object {($PSItem).enabled -like "False"} | Select-Object samaccountname, enabled } | Out-File c:\temp\Myfile-outrez.txt
-
+#Скопировать пользователей из одной группы в другую
+Add-ADGroupMember -Identity 'New Group' -Members (Get-ADGroupMember -Identity 'Old Group' -Recursive)
