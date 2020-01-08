@@ -172,4 +172,6 @@ Invoke-Command -Session $s -ScriptBlock $command
 $computers="kv-crmapp-01","kv-crmapp-02","kv-crmapp-03"
 Invoke-Command -ComputerName $computers -ScriptBlock { Get-NetTCPConnection | Where-Object state -eq "Listen" |`
  Select-Object $($env:computername),LocalAddress,LocalPort,state| Format-Table }
+ #Если нужно віводить имя компьютера в каждой строчке, то поможет такая команда
+ Invoke-Command -ComputerName $computers -ScriptBlock {Get-NetTCPConnection | Where-Object state -eq "Listen"} | Format-Table PSComputerName,LocalAddress,LocalPort,state
 
