@@ -100,3 +100,19 @@ $list | `
 Get-Content C:\temp\Myfile-all.txt | ForEach-Object {get-aduser $PSItem | Where-Object {($PSItem).enabled -like "False"} | Select-Object samaccountname, enabled } | Out-File c:\temp\Myfile-outrez.txt
 #Скопировать пользователей из одной группы в другую
 Add-ADGroupMember -Identity 'New Group' -Members (Get-ADGroupMember -Identity 'Old Group' -Recursive)
+
+#(Get-ADUser -Filter {department -like "Група з технічного обліку"} -Properties * ) | Sort-Object -Property city | Format-Table name, department, company, city, samaccountname
+(Get-ADUser -Filter {department -like "Група з технічного обліку"} -Properties * )  | Sort-Object -Property company |`
+ Select-Object name, department, company, city, samaccountname | export-csv -Delimiter ";" -Path $texoblicuserscsv -Encoding default
+#Полученный файл открываем в excel, затем добавляем названия групп (техоблик) в колонке справа. Делаем Экспорт файла в csv с новым именем. 
+#что-то не то с кириллицей, файл не находится, поэтому строчка ниже закомментирована. 
+#$mypath = "D:\Documents\Проект\Ролевая модель"
+# Перенес файл в каталог, где только английские буквы в пути к файлу.
+$mypath = "C:\temp\Groups\Add-new"
+$myfile = "Techoblic-only-3.csv"
+#несмотря на то, что эксель пишет, что сохраняет файл csv с разделителем "запятая", в команде import-csv нужно указывать ";"
+$a=Import-Csv -Path $mypath\$myfile -Encoding default -Delimiter ";"
+#Write-host ($a).grouptoadd
+#exit
+#добавляем пользователей из колонки samaccountname в группу grouptoadd
+$a | ForEach-Object {Add-ADGroupMember -Identity ($PSItem).grouptoadd -Members ($PSItem).samaccountname}
