@@ -2,7 +2,7 @@
 Resolve-DnsName microsoft.com
 Test-NetConnection 8.8.8.8
 Get-NetIPConfiguration
-Get-NetIPAddress |? AddressFamily -eq IPv4 | ft -AutoSize
+Get-NetIPAddress | Where-Object AddressFamily -eq IPv4 | Format-Table -AutoSize
 # Работа с AD
 Get-ADUser -Filter * -Properties mobile | Where-Object {$_.mobile -like "*+38 091 114-34-72*"} 
 Get-ADUser -Filter { Name -like "*Дубель *" } -Properties mobile
@@ -26,7 +26,7 @@ Get-ADPrincipalGroupMembership -Identity "p.kashpyrev"
 (GET-ADUSER –Identity odubel –Properties MemberOf | Select-Object MemberOf).MemberOf
 net user odubel /domain
 net group  kv-ho-crm-billing-dev /domain
-Get-ADGroupMember -identity kv-ho-crm-billing-testers -recursive | select name,samaccountname
+Get-ADGroupMember -identity kv-ho-crm-billing-testers -recursive | Select-Object name,samaccountname
 #Блокирование/разблокирование учетных записей
 #Get-Content "D:\Documents\Проект\Внешние поставщики\block-records.txt" | foreach { Enable-ADAccount $PSItem}
 #Get-Content "D:\Documents\Проект\Внешние поставщики\block-records.txt" | foreach {Disable-ADAccount $PSItem}
@@ -52,14 +52,15 @@ Get-ADUser -Identity "odnovikova" -Properties * | Get-Member -MemberType propert
 (Get-ADUser odubel -Properties *).l
 #м. Київ
 #выбрать из AD всех подчиненных и показать их имена и e-mail'ы
-(get-aduser -filter {name -like "Контов*"} -Properties *).directreports  | foreach {get-aduser -Identity $PSItem -Properties * | Select-Object name,userprincipalname,l, enabled| Where-Object {$PSItem.l -like "*Київ*" -and $PSItem.enabled -eq $True } } | ft name, userprincipalname -AutoSize
-(get-aduser odubel -Properties *).directreports  | foreach {get-aduser -Identity $PSItem -Properties * | Select-Object name,userprincipalname,l, enabled,title| Where-Object {$PSItem.enabled -eq $True } } | ft name, title -AutoSize
-(get-aduser odubel -Properties *).directreports  | foreach {get-aduser -Identity $PSItem -Properties * | Select-Object name,userprincipalname,l,enabled,title,company,givenname |`
- Where-Object {$PSItem.enabled -eq $True -and $PSItem.company -like "*Укртелеком*" -and $PSItem.givenname -ne $null} } | ft name, title -AutoSize
+(get-aduser -filter {name -like "Контов*"} -Properties *).directreports  | ForEach-Object {get-aduser -Identity $PSItem -Properties * |`
+     Select-Object name,userprincipalname,l, enabled| Where-Object {$PSItem.l -like "*Київ*" -and $PSItem.enabled -eq $True } } | Format-Table name, userprincipalname -AutoSize
+(get-aduser odubel -Properties *).directreports  | ForEach-Object {get-aduser -Identity $PSItem -Properties * |`
+     Select-Object name,userprincipalname,l, enabled,title| Where-Object {$PSItem.enabled -eq $True } } | Format-Table name, title -AutoSize
+(get-aduser odubel -Properties *).directreports  | ForEach-Object {get-aduser -Identity $PSItem -Properties * | Select-Object name,userprincipalname, l, enabled, title, company, givenname |`
+ Where-Object {$PSItem.enabled -eq $True -and $PSItem.company -like "*Укртелеком*" -and $PSItem.givenname -ne $null} } | Format-Table name, title -AutoSize 
 
 
-
- $userlist = Get-Content "D:\Documents\Powershell\Test-Just-Test\444.txt"
+$userlist = Get-Content "D:\Documents\Powershell\Test-Just-Test\444.txt"
 #$userlist="odubel"
 foreach ($username in $userlist) {
     $grplist = (Get-ADUser $username –Properties MemberOf | Select-Object MemberOf).MemberOf -replace '^CN=([^,]+).+$','$1'|Select-String  "all-CRM"
@@ -78,19 +79,23 @@ foreach ($username in $userlist) {
 
 $list = 'odubel','odubel','odubel'
 $list | `
-    %{  
+    ForEach-Object{  
         $user = $_; 
         get-aduser $user -Properties memberof | `
-        select -expand memberof | `
-        %{new-object PSObject -property @{User=$user;Group=$_;}} `-replace '^CN=([^,]+).+$','$1'
+        Select-Object -expand memberof | `
+        ForEach-Object{new-object PSObject -property @{User=$user;Group=$_;}} `-replace '^CN=([^,]+).+$','$1'
     }
 
 
     ([ADSISEARCHER]"samaccountname=$("odubel")").Findone().Properties.memberof -replace '^CN=([^,]+).+$','$1'
 
 #Посчитать количество пользователей которые находятся в OU, в названиях которых встречается "Blocked Accounts". 
-((Get-ADOrganizationalUnit -filter *) | Where-Object DistinguishedName -like "*Blocked Accounts*").DistinguishedName | ForEach-Object {(Get-ADUser -Filter * -searchbase $PSItem).Name } | measure
-((Get-ADOrganizationalUnit -filter *) | Where-Object DistinguishedName -like "*Blocked Accounts*").DistinguishedName | ForEach-Object {(Get-ADUser -Filter * -searchbase $PSItem) | Select-Object name, DistinguishedName } | measure
+((Get-ADOrganizationalUnit -filter *) | Where-Object DistinguishedName -like "*Blocked Accounts*").DistinguishedName |`
+         ForEach-Object {(Get-ADUser -Filter * -searchbase $PSItem).Name } | Measure-Object
+((Get-ADOrganizationalUnit -filter *) | Where-Object DistinguishedName -like "*Blocked Accounts*").DistinguishedName |`
+         ForEach-Object {(Get-ADUser -Filter * -searchbase $PSItem) | Select-Object name, DistinguishedName } | Measure-Object
+         
+         
 # перечень групп в АД, в названии которых есть *CRM* исключая группы которые перечислены после слова "-notmatch"
 (Get-ADGroup -Filter *).name | Where-Object {$PSItem -like "*CRM*" -and $PSItem -notmatch "precrm|mediation|reklama|sale|crmail|suitecrm|KV-TERM-03v3-Users_CRM"}
 
@@ -110,9 +115,13 @@ Add-ADGroupMember -Identity 'New Group' -Members (Get-ADGroupMember -Identity 'O
 # Перенес файл в каталог, где только английские буквы в пути к файлу.
 $mypath = "C:\temp\Groups\Add-new"
 $myfile = "Techoblic-only-3.csv"
-#несмотря на то, что эксель пишет, что сохраняет файл csv с разделителем "запятая", в команде import-csv нужно указывать ";"
+#несмотря на то, что эксель пишет, что сохраняет файл csv с разделителем "запятая", в команде import-csv нужно/можно указывать ";"
 $a=Import-Csv -Path $mypath\$myfile -Encoding default -Delimiter ";"
 #Write-host ($a).grouptoadd
 #exit
 #добавляем пользователей из колонки samaccountname в группу grouptoadd
 $a | ForEach-Object {Add-ADGroupMember -Identity ($PSItem).grouptoadd -Members ($PSItem).samaccountname}
+
+#Получение всех сотрудников, которые входят в группы ФФМ (группы содержат в своем названии BPM)
+(Get-ADGroup -Filter {name -like "*bpm*"}).name | Sort-Object | ForEach-Object {Write-Host $PSItem;(Get-ADGroupMember $PSItem).name}
+
