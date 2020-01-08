@@ -124,4 +124,48 @@ $a | ForEach-Object {Add-ADGroupMember -Identity ($PSItem).grouptoadd -Members (
 
 #Получение всех сотрудников, которые входят в группы ФФМ (группы содержат в своем названии BPM)
 (Get-ADGroup -Filter {name -like "*bpm*"}).name | Sort-Object | ForEach-Object {Write-Host $PSItem;(Get-ADGroupMember $PSItem).name}
+#Создать новую группу в АД 
+New-ADGroup -Description "Группа для тестов в BPM реогранизации ТД" -GroupCategory Security`
+ -GroupScope Universal -Name test-TD-new-struct-1 -SamAccountName "test-TD-new-struct-1"`
+  -Path "OU=BPM,OU=Applications,OU=Groups,OU=ICS,OU=KYIV,DC=corp,DC=ukrtelecom,DC=loc"
+New-ADGroup -Description "Дільниця транспортної мережі №116/2 м. Мукачево" -GroupCategory Security`
+ -GroupScope Universal -Name UG-BPM-CTM-DTM1162 -SamAccountName "UG-BPM-CTM-DTM1162"`
+  -Path "OU=BPM,OU=Applications,OU=Groups,OU=ICS,OU=KYIV,DC=corp,DC=ukrtelecom,DC=loc"
+New-ADGroup -Description "Дільниця транспортної мережі №116/1 м. Ужгород"  -GroupCategory Security`
+ -GroupScope Universal -Name UG-BPM-CTM-DTM1161 -SamAccountName "UG-BPM-CTM-DTM1161"`
+  -Path "OU=BPM,OU=Applications,OU=Groups,OU=ICS,OU=KYIV,DC=corp,DC=ukrtelecom,DC=loc"
+#Errors to file
+Get-Content "C:\Temp\TD-reorg\delete-all-users-from-groups.txt" | ForEach-Object {(Get-ADGroup $PSItem).name}  2>> C:\temp\errors.txt
+
+  #Найти все группі в имени которіх есть BPM и сделать их експорт в CSV файл. 
+  Get-ADGroup -Filter {name -like "*BPM*"} -Properties * | Select-Object name, description | Export-Csv -Path "c:\temp\group-bpm-export.csv" -Encodi
+  ng UTF8 -Delimiter ";"
+  #Найти все группі в описании которіх есть "Орг. Роль*" и сделать их експорт в CSV файл.
+  Get-ADGroup -Filter {description -like "Орг. Роль*"} -Properties * | Select-Object name, description | Export-Csv -Path "c:\temp\group-export.csv"
+ -Encoding UTF8 -Delimiter ";"
+# Проверяем реальній MTU к хосту, работает на PowerShell Core
+ Test-Connection -TargetName kv-dc-01 -MTUSizeDetect
+ 
+ #Remove all users from group
+ Remove-ADGroupMember "test_group" -Members (Get-ADGroupMember "test_group") -Confirm:$false
+
+ Rename-ADObject -Identity "CN=HQ,CN=Sites,CN=Configuration,DC=FABRIKAM,DC=COM" -NewName "UnitedKingdomHQ"
+ #Remove all users from AD group 
+ Get-ADGroupMember "$Group" | ForEach-Object {Remove-ADGroupMember "$Group" $_ -Confirm:$false} 
+ #получение перечня актівніх аккаунтов имя, логин, и короткий формат даті действия учетки. 
+ Get-ADUser -Filter {enabled -eq $True} -SearchBase $sbase -Properties * |`
+  Select-Object -Property name, samaccountname, enabled, @{label="Date"; expression={($PSItem.AccountExpirationDate).ToShortDateString()}} |`
+   Export-Csv -Path "c:\temp\b_accounts.csv" -Delimiter ";"
+#тоже что и віше, только учетки из файла
+Get-Content C:\temp\users-extendaccess2020.txt | ForEach-Object {get-aduser $PSItem -Properties *} |`
+ Select-Object -Property name, samaccountname, enabled, @{label="Date"; expression={($PSItem.AccountExpirationDate).ToShortDateString()}}
+#Установить удаленную сессию к powershell 7
+ New-PSSession -ComputerName kv-crmqa -Credential $admcred -EnableNetworkAccess -ConfigurationName PowerShell.7
+ #Для того, чтобі команда работала надо віполнить скрипт (путь к нему powershell знает). 
+ Install-PowerShellRemoting.ps1
+#Можно использовать как в примерах ниже
+$s = New-PSSession -ComputerName kv-crmqa -Credential $admcred -EnableNetworkAccess -ConfigurationName PowerShell.7
+$command = {Test-Connection -TargetName kv-dc-01 -MTUSizeDetect}
+Invoke-Command -Session $s -ScriptBlock $command
+
 
