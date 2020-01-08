@@ -168,4 +168,8 @@ $s = New-PSSession -ComputerName kv-crmqa -Credential $admcred -EnableNetworkAcc
 $command = {Test-Connection -TargetName kv-dc-01 -MTUSizeDetect}
 Invoke-Command -Session $s -ScriptBlock $command
 
+#Опросить сервера на предмет открітіх портов
+$computers="kv-crmapp-01","kv-crmapp-02","kv-crmapp-03"
+Invoke-Command -ComputerName $computers -ScriptBlock { Get-NetTCPConnection | Where-Object state -eq "Listen" |`
+ Select-Object $($env:computername),LocalAddress,LocalPort,state| Format-Table }
 
