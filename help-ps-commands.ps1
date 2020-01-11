@@ -40,12 +40,12 @@ Get-ADUser -Identity "odnovikova" -Properties * | Get-Member -MemberType propert
 
 
 #Получить перечень уникальных СЛД из AD
-(Get-ADUser -filter * -Properties department).department | Where-Object {$PSItem -like "Станційно-лінійна дільниця*"} | Get-Unique
+(Get-ADUser -filter * -Properties department).department | Where-Object {$PSItem -like "Станцыйно-лыныйна дыльниця*"} | Get-Unique
 
 #получить название отдела и город где работает сотрудник
 
 (Get-ADUser odubel -Properties *).department
-#Відділ впровадження білінгових систем та CRM
+#Выддыл впровадження былынгових систем та CRM
 
 (Get-ADUser odubel -Properties *).city
 #м. Київ
@@ -106,8 +106,8 @@ Get-Content C:\temp\Myfile-all.txt | ForEach-Object {get-aduser $PSItem | Where-
 #Скопировать пользователей из одной группы в другую
 Add-ADGroupMember -Identity 'New Group' -Members (Get-ADGroupMember -Identity 'Old Group' -Recursive)
 
-#(Get-ADUser -Filter {department -like "Група з технічного обліку"} -Properties * ) | Sort-Object -Property city | Format-Table name, department, company, city, samaccountname
-(Get-ADUser -Filter {department -like "Група з технічного обліку"} -Properties * )  | Sort-Object -Property company |`
+#(Get-ADUser -Filter {department -like "Група з технычного облыку"} -Properties * ) | Sort-Object -Property city | Format-Table name, department, company, city, samaccountname
+(Get-ADUser -Filter {department -like "Група з технычного облыку"} -Properties * )  | Sort-Object -Property company |`
  Select-Object name, department, company, city, samaccountname | export-csv -Delimiter ";" -Path $texoblicuserscsv -Encoding default
 #Полученный файл открываем в excel, затем добавляем названия групп (техоблик) в колонке справа. Делаем Экспорт файла в csv с новым именем. 
 #что-то не то с кириллицей, файл не находится, поэтому строчка ниже закомментирована. 
@@ -128,22 +128,22 @@ $a | ForEach-Object {Add-ADGroupMember -Identity ($PSItem).grouptoadd -Members (
 New-ADGroup -Description "Группа для тестов в BPM реогранизации ТД" -GroupCategory Security`
  -GroupScope Universal -Name test-TD-new-struct-1 -SamAccountName "test-TD-new-struct-1"`
   -Path "OU=BPM,OU=Applications,OU=Groups,OU=ICS,OU=KYIV,DC=corp,DC=ukrtelecom,DC=loc"
-New-ADGroup -Description "Дільниця транспортної мережі №116/2 м. Мукачево" -GroupCategory Security`
+New-ADGroup -Description "Дыльниця транспортної мережы №116/2 м. Мукачево" -GroupCategory Security`
  -GroupScope Universal -Name UG-BPM-CTM-DTM1162 -SamAccountName "UG-BPM-CTM-DTM1162"`
   -Path "OU=BPM,OU=Applications,OU=Groups,OU=ICS,OU=KYIV,DC=corp,DC=ukrtelecom,DC=loc"
-New-ADGroup -Description "Дільниця транспортної мережі №116/1 м. Ужгород"  -GroupCategory Security`
+New-ADGroup -Description "Дыльниця транспортної мережы №116/1 м. Ужгород"  -GroupCategory Security`
  -GroupScope Universal -Name UG-BPM-CTM-DTM1161 -SamAccountName "UG-BPM-CTM-DTM1161"`
   -Path "OU=BPM,OU=Applications,OU=Groups,OU=ICS,OU=KYIV,DC=corp,DC=ukrtelecom,DC=loc"
 #Errors to file
 Get-Content "C:\Temp\TD-reorg\delete-all-users-from-groups.txt" | ForEach-Object {(Get-ADGroup $PSItem).name}  2>> C:\temp\errors.txt
 
-  #Найти все группі в имени которіх есть BPM и сделать их експорт в CSV файл. 
+  #Найти все группы в имени которых есть BPM и сделать их експорт в CSV файл. 
   Get-ADGroup -Filter {name -like "*BPM*"} -Properties * | Select-Object name, description | Export-Csv -Path "c:\temp\group-bpm-export.csv" -Encodi
   ng UTF8 -Delimiter ";"
-  #Найти все группі в описании которіх есть "Орг. Роль*" и сделать их експорт в CSV файл.
+  #Найти все группы в описании которых есть "Орг. Роль*" и сделать их експорт в CSV файл.
   Get-ADGroup -Filter {description -like "Орг. Роль*"} -Properties * | Select-Object name, description | Export-Csv -Path "c:\temp\group-export.csv"
  -Encoding UTF8 -Delimiter ";"
-# Проверяем реальній MTU к хосту, работает на PowerShell Core
+# Проверяем реальный MTU к хосту, работает на PowerShell Core
  Test-Connection -TargetName kv-dc-01 -MTUSizeDetect
  
  #Remove all users from group
@@ -152,11 +152,11 @@ Get-Content "C:\Temp\TD-reorg\delete-all-users-from-groups.txt" | ForEach-Object
  Rename-ADObject -Identity "CN=HQ,CN=Sites,CN=Configuration,DC=FABRIKAM,DC=COM" -NewName "UnitedKingdomHQ"
  #Remove all users from AD group 
  Get-ADGroupMember "$Group" | ForEach-Object {Remove-ADGroupMember "$Group" $_ -Confirm:$false} 
- #получение перечня актівніх аккаунтов имя, логин, и короткий формат даті действия учетки. 
+ #получение перечня актывных аккаунтов имя, логин, и короткий формат даты действия учетки. 
  Get-ADUser -Filter {enabled -eq $True} -SearchBase $sbase -Properties * |`
   Select-Object -Property name, samaccountname, enabled, @{label="Date"; expression={($PSItem.AccountExpirationDate).ToShortDateString()}} |`
    Export-Csv -Path "c:\temp\b_accounts.csv" -Delimiter ";"
-#тоже что и віше, только учетки из файла
+#тоже что и выше, только учетки из файла
 Get-Content C:\temp\users-extendaccess2020.txt | ForEach-Object {get-aduser $PSItem -Properties *} |`
  Select-Object -Property name, samaccountname, enabled, @{label="Date"; expression={($PSItem.AccountExpirationDate).ToShortDateString()}}
 #Установить удаленную сессию к powershell 7
@@ -168,7 +168,7 @@ $s = New-PSSession -ComputerName kv-crmqa -Credential $admcred -EnableNetworkAcc
 $command = {Test-Connection -TargetName kv-dc-01 -MTUSizeDetect}
 Invoke-Command -Session $s -ScriptBlock $command
 
-#Опросить сервера на предмет открітіх портов
+#Опросить сервера на предмет открытых портов
 $computers="kv-crmapp-01","kv-crmapp-02","kv-crmapp-03"
 Invoke-Command -ComputerName $computers -ScriptBlock { Get-NetTCPConnection | Where-Object state -eq "Listen" |`
  Select-Object $($env:computername),LocalAddress,LocalPort,state| Format-Table }
