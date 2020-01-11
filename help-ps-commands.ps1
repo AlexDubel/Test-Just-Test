@@ -161,7 +161,7 @@ Get-Content C:\temp\users-extendaccess2020.txt | ForEach-Object {get-aduser $PSI
  Select-Object -Property name, samaccountname, enabled, @{label="Date"; expression={($PSItem.AccountExpirationDate).ToShortDateString()}}
 #Установить удаленную сессию к powershell 7
  New-PSSession -ComputerName kv-crmqa -Credential $admcred -EnableNetworkAccess -ConfigurationName PowerShell.7
- #Для того, чтобі команда работала надо віполнить скрипт (путь к нему powershell знает). 
+#Для того, чтобы команда работала надо выполнить скрипт (путь к нему powershell знает). 
  Install-PowerShellRemoting.ps1
 #Можно использовать как в примерах ниже
 $s = New-PSSession -ComputerName kv-crmqa -Credential $admcred -EnableNetworkAccess -ConfigurationName PowerShell.7
